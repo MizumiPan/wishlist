@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>社拍許願池</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const predefinedCategories = {
+      生活用品: {
+        "水壺/水杯/保溫瓶": ["水壺", "吸管水壺", "馬克杯", "保溫瓶", "冰壩杯"],
+        餐具: ["泡麵碗", "玻璃保鮮盒", "攜帶餐具"],
+        收納用品: ["桌上收納櫃", "摺疊式收納盒", "三層活動推車", "化妝盒", "置物盒", "上掀式收納箱"],
+        寢具: ["床包", "涼被", "頸枕", "棉被", "法蘭絨毯", "涼墊", "涼感床包"],
+        兒童寢具: ["小枕頭", "兒童睡袋", "嬰兒防踢被", "兒童睡墊"],
+        衛浴用品: ["漱口杯", "兒童牙刷", "浴巾", "毛巾"],
+        居家用品: ["冰敷袋", "OK蹦", "珪藻土地墊", "掀蓋式垃圾桶", "迷你摺疊桌"],
+        文具: ["鉛筆盒/袋", "彩色筆/蠟筆", "鉛筆/自動筆/原子筆", "墊板", "書套", "書架"],
+      },
+      服飾: {
+        兒童: ["衣服", "褲子", "裙子"],
+        大人: ["男生上衣", "女生上衣"],
+      },
+      "鞋/襪": {
+        兒童: ["布鞋/運動鞋", "拖鞋/涼鞋", "襪子"],
+        大人: ["布鞋/運動鞋", "拖鞋/涼鞋", "靴子", "襪子"],
+      },
+      "包包/配件": {
+        "包袋-大": ["側背/斜背包", "後背包", "旅行收納袋", "小雨傘系列", "購物袋"],
+        "包袋-小": ["皮夾", "斜背手機袋", "便當袋", "小雨傘系列", "證件套", "零錢包"],
+        兒童背包: ["怡寶書包"],
+        配件: ["帽子", "髮圈/髮飾", "項鍊", "手鍊", "眼鏡盒", "兒童手錶"],
+      },
+      旅遊用品: {
+        戶外用品: ["野餐墊", "露營拖車", "帳篷", "摺疊傘", "摺疊椅"],
+        行李箱: ["14~16吋手提行李箱", "18~20吋登機箱", "24~26吋行李箱", "27吋以上行李箱", "20吋以下行李套", "24~26吋行李套", "27吋以上行李套", "束帶"],
+      },
+      "3C電器": {
+        小家電: ["美食鍋", "手持風扇", "鬧鐘", "小夜燈"],
+        數位用品: ["藍芽耳機", "行動電源", "備份豆腐", "鍵盤", "滑鼠", "充電頭"],
+      },
+      其他: {
+        粉絲向商品: ["KR大眼蛙", "TS雙星仙子", "CN大耳狗", "KU酷洛米", "HG人魚漢頓", "PN布丁狗", "XO酷企鵝"],
+        拼圖: ["50片以下(兒童拼圖)", "100~200片", "300片", "520片", "1000片"],
+        其他商品: [],
+      },
+    };
+
+    function App() {
+      const [name, setName] = useState("");
+      const [wishes, setWishes] = useState({});
+      const [customWishes, setCustomWishes] = useState({});
+
+      const getCategoryPlaceholder = (category, subCategory) => {
+        if (category === "服飾") return subCategory === "兒童" ? "尺寸(ex.120cm,新生兒)" : "尺寸(XS, S, M, L, XL, XXL)";
+        if (category === "鞋/襪") return "尺寸(cm)";
+        if (subCategory === "粉絲向商品") return "類型(ex.娃娃)";
+        if (subCategory === "水壺/水杯/保溫瓶") return "容量(ml)";
+        if (subCategory === "寢具") return "單人/雙人";
+        return "尺寸/容量(選填)";
+      };
+
+      const addWish = (category, subCategory, item) => {
+        const wishKey = `${category}:${subCategory}`;
+        setWishes((prev) => ({
+          ...prev,
+          [wishKey]: [...(prev[wishKey] || []), { item, size: "", quantity: 1 }],
+        }));
+      };
+
+      const updateWish = (category, subCategory, index, field, value) => {
+        const wishKey = `${category}:${subCategory}`;
+        setWishes((prev) => ({
+          ...prev,
+          [wishKey]: prev[wishKey].map((wish, i) => i === index ? { ...wish, [field]: value } : wish),
+        }));
+      };
+
+      const removeWish = (category, subCategory, index) => {
+        const wishKey = `${category}:${subCategory}`;
+        setWishes((prev) => ({
+          ...prev,
+          [wishKey]: prev[wishKey].filter((_, i) => i !== index),
+        }));
+      };
+
+      const addCustomWish = (category, subCategory) => {
+        const wishKey = `${category}:${subCategory}`;
+        setCustomWishes((prev) => ({
+          ...prev,
+          [wishKey]: [...(prev[wishKey] || []), { id: Date.now(), name: "", size: "", quantity: 1 }],
+        }));
+      };
+
+      const updateCustomWish = (category, subCategory, id, field, value) => {
+        const wishKey = `${category}:${subCategory}`;
+        setCustomWishes((prev) => ({
+          ...prev,
+          [wishKey]: prev[wishKey].map((wish) => wish.id === id ? { ...wish, [field]: value } : wish),
+        }));
+      };
+
+      const removeCustomWish = (category, subCategory, id) => {
+        const wishKey = `${category}:${subCategory}`;
+        setCustomWishes((prev) => ({
+          ...prev,
+          [wishKey]: prev[wishKey].filter((wish) => wish.id !== id),
+        }));
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbza8dCzlvhqjkFB6CoMw0TbL2qPO-x8KnqA2pnrP6KvNlgs4wKJNFwOIFa8ClZNCPXn/exec";
+        const allWishesData = [];
+
+        Object.entries(wishes).forEach(([key, wishArray]) => {
+          const [category, subCategory] = key.split(":");
+          wishArray.forEach((wish) => {
+            allWishesData.push({ name, category, subCategory, item: wish.item, size: wish.size || "", quantity: wish.quantity });
+          });
+        });
+
+        Object.entries(customWishes).forEach(([key, wishArray]) => {
+          const [category, subCategory] = key.split(":");
+          wishArray.forEach((wish) => {
+            allWishesData.push({ name, category, subCategory, item: wish.name, size: wish.size || "", quantity: wish.quantity });
+          });
+        });
+
+        try {
+          await fetch(scriptUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wishlist: allWishesData }),
+          });
+          alert("許願成功!!");
+          setName("");
+          setWishes({});
+          setCustomWishes({});
+        } catch (error) {
+          console.error("錯誤:", error);
+          alert("提交失敗，請稍後再試");
+        }
+      };
+
+      return (
+        <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-xl">
+          <h2 style={{ fontSize: "32px", fontWeight: "bold", color: "#10B981", marginBottom: "1rem", borderBottom: "2px solid #10B981" }}>
+            社拍許願池2026/08/24
+          </h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="name" className="block text-gray-700 mb-2" style={{ fontWeight: "bold", fontSize: "20px" }}>姓名</label>
+              <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="ex.凱咪" className="w-1/4 px-2 py-1 border rounded text-sm" required />
+            </div>
+            <p style={{ fontSize: "14px", color: "#4B5563", marginBottom: "1rem", lineHeight: "1.5" }}>
+              ※請每次填寫務必保持姓名一致<br />
+               點擊<span style={{ color: "#179fff" }}>左側按鈕</span>來添加品項並填入資料<br />
+               需要多項則<span style={{ color: "#179fff" }}>重複點擊</span>即可增加欄位<br /> 
+              <span style={{ fontSize: "20px", color: "#FF0000", fontWeight: "bold" }}>08/21 23:59收單</span>
+            </p>
+
+            <div className="my-6 flex flex-col items-start">
+  <p className="text-sm font-bold text-gray-700 mb-2">
+    📍 現場動線與分區對照圖
+  </p>
+  <img
+    src="https://lh3.googleusercontent.com/d/18Vx056mFPoDl6hkXWqqYOs4rsKcNj0CZ"
+    alt="現場攤位分區圖"
+    style={{
+      width: "200px",
+      maxWidth: "60vw",
+      height: "auto",
+      display: "block",
+    }}
+    className="rounded border border-gray-300 shadow-sm"
+  />
+</div>
+
+            {Object.entries(predefinedCategories).map(([category, subCategories]) => (
+              <div key={category} className="mb-6">
+                <h3 className="font-bold mb-4" style={{ fontSize: "24px", color: "#179fff" }}>{category}</h3>
+                {Object.entries(subCategories).map(([subCategory, items]) => {
+                  const wishKey = `${category}:${subCategory}`;
+                  const categoryCustomWishes = customWishes[wishKey] || [];
+                  return (
+                    <div key={subCategory} className="ml-4 mb-4">
+                      <h4 className="text-lg font-semibold mb-2">{subCategory}</h4>
+                      <table className="w-full">
+                        <tbody>
+                          {items.map((item) => {
+                            const itemWishes = (wishes[wishKey] || []).filter((w) => w.item === item);
+                            return (
+                              <tr key={item} className="border-b">
+                                <td className="py-2 w-1/3">
+                                  <button type="button" onClick={() => addWish(category, subCategory, item)} className="text-left px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm w-full">
+                                    {item}
+                                  </button>
+                                </td>
+                                <td className="py-2">
+                                  {itemWishes.map((wish, index) => (
+                                    <div key={index} className="flex items-center space-x-2 mb-1">
+                                      <input type="text" value={wish.size} onChange={(e) => updateWish(category, subCategory, wishes[wishKey].findIndex((w) => w === wish), "size", e.target.value)} placeholder={getCategoryPlaceholder(category, subCategory)} className="w-1/3 px-2 py-1 border rounded text-sm" />
+                                      <input type="number" value={wish.quantity} onChange={(e) => updateWish(category, subCategory, wishes[wishKey].findIndex((w) => w === wish), "quantity", parseInt(e.target.value) || 1)} placeholder="數量" className="w-1/3 px-2 py-1 border rounded text-sm" min="1" max="999" required />
+                                      <button type="button" onClick={() => removeWish(category, subCategory, wishes[wishKey].findIndex((w) => w === wish))} className="text-red-500 hover:text-red-700 text-sm">刪除</button>
+                                    </div>
+                                  ))}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      <div className="mt-2">
+                        {categoryCustomWishes.map((cw) => (
+                          <div key={cw.id} className="flex items-center space-x-2 mb-2">
+                            <input type="text" value={cw.name} onChange={(e) => updateCustomWish(category, subCategory, cw.id, "name", e.target.value)} placeholder="商品" className="flex-grow px-2 py-1 border rounded text-sm" required />
+                            <input type="text" value={cw.size} onChange={(e) => updateCustomWish(category, subCategory, cw.id, "size", e.target.value)} placeholder={getCategoryPlaceholder(category, subCategory)} className="w-1/4 px-2 py-1 border rounded text-sm" />
+                            <input type="number" value={cw.quantity} onChange={(e) => updateCustomWish(category, subCategory, cw.id, "quantity", parseInt(e.target.value) || 1)} placeholder="數量" className="w-16 px-2 py-1 border rounded text-sm" min="1" max="999" required />
+                            <button type="button" onClick={() => removeCustomWish(category, subCategory, cw.id)} className="text-red-500 hover:text-red-700 text-sm">刪除</button>
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => addCustomWish(category, subCategory)} style={{ backgroundColor: "#10B981", color: "white", fontWeight: "bold", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.875rem" }}>新增願望</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <button type="submit" style={{ width: "100%", backgroundColor: "#179fff", color: "white", fontWeight: "bold", padding: "0.5rem 1rem", borderRadius: "0.25rem", fontSize: "1rem", cursor: "pointer", marginTop: "1.5rem" }}>
+              提交願望清單
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
